@@ -102,8 +102,8 @@ def train_model(X, y):
 
     print("🔄 Training RandomForestClassifier...")
     model = RandomForestClassifier(
-        n_estimators=200,
-        random_state=42,
+        n_estimators=35,
+        random_state=10,
         class_weight="balanced"
     )
     model.fit(X_train, y_train)
