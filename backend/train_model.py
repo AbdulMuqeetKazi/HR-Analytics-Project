@@ -102,8 +102,8 @@ def train_model(X, y):
 
     print("🔄 Training RandomForestClassifier...")
     model = RandomForestClassifier(
-        n_estimators=35,
-        random_state=10,
+        n_estimators=18,
+        random_state=6,
         class_weight="balanced"
     )
     model.fit(X_train, y_train)
@@ -132,7 +132,6 @@ def main():
     model = train_model(X, y)
     save_model(model, feature_cols)
     print("🎉 Training pipeline finished without errors.")
-
 
 if __name__ == "__main__":
     main()
