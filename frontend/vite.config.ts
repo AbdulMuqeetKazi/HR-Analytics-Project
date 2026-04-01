@@ -19,4 +19,33 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+
+  build: {
+    // Increase chunk size warning limit to 600 kB
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        // Manual code splitting to reduce chunk sizes
+        manualChunks: {
+          // Routing
+          'vendor-router': ['react-router-dom'],
+          // Firebase (large SDK)
+          'vendor-firebase': ['firebase/app', 'firebase/auth'],
+          // Charts library
+          'vendor-recharts': ['recharts'],
+          // UI animation
+          'vendor-motion': ['motion'],
+          // Radix UI primitives
+          'vendor-radix': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-popover',
+          ],
+        },
+      },
+    },
+  },
 })
