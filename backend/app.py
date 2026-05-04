@@ -20,7 +20,10 @@ CSV_SEPARATOR = ","  # if needed: ";"
 # APP & MODEL LOADING
 # ----------------------------------------------------
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": [
+    "https://hr-analytics-project.vercel.app",
+    "http://localhost:5173"
+]}})
 
 
 print(f"🔄 Loading ML model from {MODEL_PATH} ...")
@@ -206,7 +209,5 @@ def predict_single():
     )
 
 if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 8080))
-    )
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
