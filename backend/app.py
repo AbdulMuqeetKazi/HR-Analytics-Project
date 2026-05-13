@@ -89,14 +89,16 @@ def home():
 @app.route("/employees", methods=["GET"])
 def get_employees():
     """
-    Return employees with selected fields and ML risk scores.
-    Adapted to your CSV columns.
+    Optimized employee endpoint.
+    - Supports search
+    - Returns only first 100 rows
+    - Faster for Render free tier
     """
 
-    # Columns available in your dataset (based on your logs)
-    # ['Employee ID', 'Age', 'Gender', 'Years at Company', 'Job Role',
-    #  'Monthly Income', 'Number of Promotions', 'Distance from Home',
-    #  'Number of Dependents', 'Company Tenure', 'Attrition', 'AttritionFlag', ...]
+    # Search query from frontend
+    search = request.args.get("search", "").lower()
+
+    # Columns to display
     display_cols = [
         "Employee ID",
         "Age",
@@ -112,39 +114,66 @@ def get_employees():
         "riskLevel",
     ]
 
-    # Keep only columns that actually exist in the dataframe
+    # Keep only existing columns
     final_cols = [c for c in display_cols if c in employees_df.columns]
 
+    # Create copy
     data = employees_df[final_cols].copy()
 
-    # Convert riskScore to rounded float to avoid huge decimals
+    # -----------------------------------------
+    # SEARCH FILTER
+    # -----------------------------------------
+    if search:
+        if "Job Role" in data.columns:
+            data = data[
+                data["Job Role"]
+                .astype(str)
+                .str.lower()
+                .str.contains(search)
+            ]
+
+    # -----------------------------------------
+    # LIMIT RESULTS (IMPORTANT)
+    # -----------------------------------------
+    data = data.head(100)
+
+    # Round risk score
     if "riskScore" in data.columns:
         data["riskScore"] = data["riskScore"].round(3)
 
+    # Convert to JSON
     records = data.to_dict("records")
 
-    # KPI stats
-    total = len(records)
-    high_risk = sum(1 for e in records if e.get("riskLevel") == "HIGH")
+    # KPI Stats
+    total = len(employees_df)
+
+    high_risk = int(
+        (employees_df["riskLevel"] == "HIGH").sum()
+    )
 
     stats = {}
-    if "Age" in employees_df.columns:
-        stats["avgAge"] = round(float(employees_df["Age"].mean()), 1)
-    if "Years at Company" in employees_df.columns:
-        stats["avgTenure"] = round(float(employees_df["Years at Company"].mean()), 1)
-    if "Monthly Income" in employees_df.columns:
-        avg_income = round(float(employees_df["Monthly Income"].mean()))
-        stats["avgIncome"] = avg_income
 
-    response = {
+    if "Age" in employees_df.columns:
+        stats["avgAge"] = round(
+            float(employees_df["Age"].mean()), 1
+        )
+
+    if "Years at Company" in employees_df.columns:
+        stats["avgTenure"] = round(
+            float(employees_df["Years at Company"].mean()), 1
+        )
+
+    if "Monthly Income" in employees_df.columns:
+        stats["avgIncome"] = round(
+            float(employees_df["Monthly Income"].mean())
+        )
+
+    return jsonify({
         "employees": records,
         "total": total,
         "highRisk": high_risk,
         "stats": stats,
-    }
-
-    return jsonify(response)
-
+    })
 
 @app.route("/stats", methods=["GET"])
 def get_stats():
